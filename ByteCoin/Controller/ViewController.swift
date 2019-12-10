@@ -10,20 +10,25 @@ import UIKit
 
 //Adding the UIPickerViewDataSource protocol for the currency picker
 //Adding UIPickerViewDelegate to watch for choice option
-class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDelegate {
+class ViewController: UIViewController, UIPickerViewDataSource {
     
-
     //IBOutlet
     @IBOutlet weak var bitcoinLabel: UILabel!
     @IBOutlet weak var currencyLabel: UILabel!
     @IBOutlet weak var currencyPicker: UIPickerView!
     
     //Creating instance of CoinManager
-    let coinManager = CoinManager()
+    var coinManager = CoinManager()
+    
+    //Current selection from picker
+    var selectedCurrency = "USD"
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+        
+        //Set class as delegate for CoinManagerDelegate
+        coinManager.delegate = self
         
         //set as data source for currency picker to display options
         currencyPicker.dataSource = self
@@ -31,7 +36,31 @@ class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDele
         //set as delegate for currency picker activity
         currencyPicker.delegate = self
     }
+}
 
+//MARK: - CoinManagerDelegate
+
+//Creating extension of ViewController to include CoinManagerDelegate
+
+extension ViewController: CoinManagerDelegate {
+    func didUpdateCoin(_ coinManager: CoinManager, coin: CoinModel) {
+        DispatchQueue.main.async {
+            self.bitcoinLabel.text = coin.lastToString
+            self.currencyLabel.text = self.selectedCurrency
+            //            print("Triggered", coin.lastToString)
+        }
+    }
+    
+    func didFailWithError(error: Error) {
+        print("Error:", error)
+    }
+}
+
+
+//MARK: - UIPickerViewDelegate
+
+extension ViewController: UIPickerViewDelegate {
+    
     //1st method for the UIPickerViewDataSource protocol for columns
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
         //this is how many columns to return in the picker
@@ -53,7 +82,8 @@ class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDele
     
     //2nd This method checks which option is currently selected in the picker
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-        let selectedCurrency = coinManager.currencyArray[row]
+        selectedCurrency = coinManager.currencyArray[row]
         coinManager.getCoinPrice(for: selectedCurrency)
     }
+    
 }
